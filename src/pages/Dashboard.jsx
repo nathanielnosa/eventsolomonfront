@@ -20,6 +20,7 @@ const Dashboard = () => {
   // Redux state
   const user = useSelector((state) => state.auth.user);
   const profile = `${import.meta.env.VITE_API_SERVER_IMAGE}`+`${user.image}`
+  console.log(profile)
   const { events, loading: eventsLoading } = useSelector((state) => state.events);
   const { groups, loading: groupsLoading } = useSelector((state) => state.groups);
 
