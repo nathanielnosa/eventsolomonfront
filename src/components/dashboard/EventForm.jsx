@@ -1,0 +1,255 @@
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
+import { createEvent } from "../../redux/features/eventSlice";
+
+const EventForm = ({ groups }) => {
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const { loading, error } = useSelector((state) => state.events);
+
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    group: "",
+    tagUsers: "",
+    contact: {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+    },
+    file: null,
+  });
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleContactChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      contact: { ...prev.contact, [name]: value },
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const { files } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      file: files[0],
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!formData.group) {
+      toast.error("Please select a group");
+      return;
+    }
+
+    const taggedUserIds = formData.tagUsers
+      .split(",")
+      .map((username) => username.trim())
+      .filter((username) => username);
+
+    const eventData = new FormData();
+    eventData.append("title", formData.title);
+    eventData.append("description", formData.description);
+    eventData.append("group", formData.group);
+    taggedUserIds.forEach(id => eventData.append("tagged_users", id));
+    Object.entries(formData.contact).forEach(([key, value]) => {
+      eventData.append(`contact_${key}`, value);
+    });
+    if (formData.file) eventData.append("file", formData.file);
+
+    try {
+      const resultAction = await dispatch(createEvent(eventData));
+      if (createEvent.fulfilled.match(resultAction)) {
+        toast.success("Event created successfully!");
+        setFormData({
+          title: "",
+          description: "",
+          group: "",
+          tagUsers: "",
+          contact: { name: "", email: "", phone: "", address: "" },
+          file: null,
+        });
+      }
+    } catch (err) {
+      toast.error("Error creating event:", err);
+    }
+  };
+
+  return (
+    <div className="col-lg-6 mb-4">
+      <div className="card">
+        <ToastContainer />
+        <div className="card-header bg-primary text-white">
+          <h5>Create Event</h5>
+        </div>
+        <div className="card-body">
+          {!user ? (
+            <p className="text-danger">You must be logged in to create an event.</p>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              {/* Title */}
+              <div className="mb-3">
+                <label className="form-label">Title</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Event Title"
+                  name="title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+
+              {/* Description */}
+              <div className="mb-3">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-control"
+                  rows="2"
+                  placeholder="Event Description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  required
+                ></textarea>
+              </div>
+
+              {/* Group Selection */}
+              <div className="mb-3">
+                <label className="form-label">Group</label>
+                <select
+                  className="form-control"
+                  name="group"
+                  value={formData.group}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select a Group</option>
+                  {(Array.isArray(groups) ? groups : []).map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tag Users */}
+              <div className="mb-3">
+                <label className="form-label">Tag Users</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Enter usernames separated by commas"
+                  name="tagUsers"
+                  value={formData.tagUsers}
+                  onChange={handleChange}
+                />
+              </div>
+
+              {/* Contact Details */}
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label">Contact Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Contact Name"
+                      name="name"
+                      value={formData.contact.name}
+                      onChange={handleContactChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label">Contact Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="Contact Email"
+                      name="email"
+                      value={formData.contact.email}
+                      onChange={handleContactChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label">Contact Phone</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Contact phone"
+                      name="phone"
+                      value={formData.contact.phone}
+                      onChange={handleContactChange}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="mb-3">
+                    <label className="form-label">Contact Address</label>
+                    <textarea
+                      className="form-control"
+                      rows="2"
+                      placeholder="Contact Address"
+                      name="address"
+                      value={formData.contact.address}
+                      onChange={handleContactChange}
+                      required
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Upload */}
+              <div className="mb-3">
+                <label className="form-label">Upload File</label>
+                <input
+                  type="file"
+                  className="form-control"
+                  name="file"
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={loading || !user || groups.length === 0}
+              >
+                {loading ? "Creating..." : 
+                 groups.length === 0 ? "Create a Group First" : "Create Event"}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EventForm;

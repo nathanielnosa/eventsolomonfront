@@ -1,0 +1,48 @@
+<div className="p-4 text-primary">
+            <h3 className="fw-bold fs-1">Welcome Back!</h3>
+            <p className="mt-2 fs-6 mb-5">To keep connected with us please login with your personal info</p>
+            <img src={login} alt="welcome user" className="w-100 d-none d-md-block" />
+          </div>
+          <div className="w-100 py-4 bg-white rounded-end rounded-bottom">
+            <h1 className="fw-bold fs-3">Sign in</h1>
+            <div className="w-25 mx-auto border overflow-hidden rounded-circle shadow-md">
+              {/* <img src={icons} alt="register icon" className="w-100" /> */}
+            </div>
+            <form className="mt-4" onSubmit={handleSubmit} autoComplete="off">
+              <div className="mb-3">
+                <label htmlFor="username" className="form-label fw-medium">Username</label>
+                <input
+                  type="text"
+                  name="uname"
+                  value=""
+                  onChange={handleOnChange}
+                  id="email"
+                  className="form-control bg-light"
+                  autoComplete="off"
+                />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="pwd" className="form-label fw-medium">Password</label>
+                <div className="input-group bg-light rounded">
+                  <input
+                    type={showPwd ? "text" : "password"}
+                    name="pwd"
+                    value=""
+                    onChange={handleOnChange}
+                    id="pwd"
+                    className="form-control bg-light"
+                    autoComplete="off"
+                  />
+                  <span className="input-group-text cursor-pointer" onClick={handleShowPwd}>
+                    {showPwd ? <BiShow /> : <BiHide />}
+                  </span>
+                </div>
+              </div>
+              <div className="mb-3">
+                <button className="btn btn-primary w-100 py-2">Login</button>
+              </div>
+              <div className="mb-2">
+                <Link to="/register">Don&apos;t have an account? <span className="fw-medium">Register</span></Link>
+              </div>
+            </form>
+          </div>
