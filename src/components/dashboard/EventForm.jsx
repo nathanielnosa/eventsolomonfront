@@ -54,27 +54,34 @@ const EventForm = ({ groups }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!formData.group) {
       toast.error("Please select a group");
       return;
     }
-
+  
     const taggedUserIds = formData.tagged_users
       .split(",")
       .map((username) => username.trim())
       .filter((username) => username);
-
+  
     const eventData = new FormData();
     eventData.append("title", formData.title);
     eventData.append("description", formData.description);
     eventData.append("group", formData.group);
     taggedUserIds.forEach(id => eventData.append("tagged_users", id));
-    Object.entries(formData.contacts).forEach(([key, value]) => {
-      eventData.append(`contacts_${key}`, value);
-    });
+  
+    // Create a contacts object and append it as JSON
+    const contacts = {
+      name: formData.contacts.name,
+      email: formData.contacts.email,
+      phone: formData.contacts.phone,
+      address: formData.contacts.address,
+    };
+    eventData.append("contacts", JSON.stringify([contacts])); // Wrap in an array
+  
     if (formData.file) eventData.append("file", formData.file);
-
+  
     try {
       const resultAction = await dispatch(createEvent(eventData));
       if (createEvent.fulfilled.match(resultAction)) {
@@ -92,7 +99,7 @@ const EventForm = ({ groups }) => {
       toast.error("Error creating event:", err);
     }
   };
-
+  
   return (
     <div className="col-lg-6 mb-4">
       <div className="card">
