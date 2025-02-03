@@ -52,54 +52,64 @@ const EventForm = ({ groups }) => {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    if (!formData.group) {
-      toast.error("Please select a group");
-      return;
-    }
-  
-    const taggedUserIds = formData.tagged_users
-      .split(",")
-      .map((username) => username.trim())
-      .filter((username) => username);
-  
-    const eventData = new FormData();
-    eventData.append("title", formData.title);
-    eventData.append("description", formData.description);
-    eventData.append("group", formData.group);
-    taggedUserIds.forEach(id => eventData.append("tagged_users", id));
-  
-    // Create a contacts object and append it as JSON
-    const contacts = {
-      name: formData.contacts.name,
-      email: formData.contacts.email,
-      phone: formData.contacts.phone,
-      address: formData.contacts.address,
-    };
-    eventData.append("contacts", JSON.stringify([contacts])); // Wrap in an array
-  
-    if (formData.file) eventData.append("file", formData.file);
-  
-    try {
-      const resultAction = await dispatch(createEvent(eventData));
-      if (createEvent.fulfilled.match(resultAction)) {
-        toast.success("Event created successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          group: "",
-          tagged_users: "",
-          contacts: { name: "", email: "", phone: "", address: "" },
-          file: null,
-        });
+  // In EventForm.jsx (Frontend)
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!formData.group) {
+    toast.error("Please select a group");
+    return;
+  }
+
+  // ✅ Convert usernames to user IDs via API call
+  const taggedUsernames = formData.tagged_users
+    .split(",")
+    .map((username) => username.trim())
+    .filter((username) => username);
+
+  // Fetch user IDs from the backend using usernames
+  const taggedUserIds = await Promise.all(
+    taggedUsernames.map(async (username) => {
+      try {
+        const response = await fetch(`/api/users/?username=${username}`);
+        const data = await response.json();
+        return data.id; // Assume the API returns user details including ID
+      } catch (err) {
+        toast.error(`User ${username} not found`);
+        return null;
       }
-    } catch (err) {
-      toast.error("Error creating event:", err);
-    }
+    })
+  ).then(ids => ids.filter(id => id !== null)); // Remove invalid users
+
+  // Prepare FormData
+  const eventData = new FormData();
+  eventData.append("title", formData.title);
+  eventData.append("description", formData.description);
+  eventData.append("group", formData.group);
+  taggedUserIds.forEach(id => eventData.append("tagged_users", id)); // ✅ Send IDs
+
+  // Append contacts as JSON
+  const contacts = {
+    name: formData.contacts.name,
+    email: formData.contacts.email,
+    phone: formData.contacts.phone,
+    address: formData.contacts.address,
   };
-  
+  eventData.append("contacts", JSON.stringify([contacts]));
+
+  if (formData.file) eventData.append("file", formData.file);
+
+  try {
+    const resultAction = await dispatch(createEvent(eventData));
+    if (createEvent.fulfilled.match(resultAction)) {
+      toast.success("Event created successfully!");
+      setFormData({ ...formData }); // Reset form
+    }
+  } catch (err) {
+    toast.error("Error creating event: " + err.message);
+  }
+};
+
   return (
     <div className="col-lg-6 mb-4">
       <div className="card">
