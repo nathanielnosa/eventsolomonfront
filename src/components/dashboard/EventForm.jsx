@@ -12,8 +12,8 @@ const EventForm = ({ groups }) => {
     title: "",
     description: "",
     group: "",
-    tagUsers: "",
-    contact: {
+    tagged_users: "",
+    contacts: {
       name: "",
       email: "",
       phone: "",
@@ -40,7 +40,7 @@ const EventForm = ({ groups }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      contact: { ...prev.contact, [name]: value },
+      contacts: { ...prev.contacts, [name]: value },
     }));
   };
 
@@ -60,7 +60,7 @@ const EventForm = ({ groups }) => {
       return;
     }
 
-    const taggedUserIds = formData.tagUsers
+    const taggedUserIds = formData.tagged_users
       .split(",")
       .map((username) => username.trim())
       .filter((username) => username);
@@ -70,8 +70,8 @@ const EventForm = ({ groups }) => {
     eventData.append("description", formData.description);
     eventData.append("group", formData.group);
     taggedUserIds.forEach(id => eventData.append("tagged_users", id));
-    Object.entries(formData.contact).forEach(([key, value]) => {
-      eventData.append(`contact_${key}`, value);
+    Object.entries(formData.contacts).forEach(([key, value]) => {
+      eventData.append(`contacts_${key}`, value);
     });
     if (formData.file) eventData.append("file", formData.file);
 
@@ -83,8 +83,8 @@ const EventForm = ({ groups }) => {
           title: "",
           description: "",
           group: "",
-          tagUsers: "",
-          contact: { name: "", email: "", phone: "", address: "" },
+          tagged_users: "",
+          contacts: { name: "", email: "", phone: "", address: "" },
           file: null,
         });
       }
@@ -159,8 +159,8 @@ const EventForm = ({ groups }) => {
                   type="text"
                   className="form-control"
                   placeholder="Enter usernames separated by commas"
-                  name="tagUsers"
-                  value={formData.tagUsers}
+                  name="tagged_users"
+                  value={formData.tagged_users}
                   onChange={handleChange}
                 />
               </div>
@@ -175,7 +175,7 @@ const EventForm = ({ groups }) => {
                       className="form-control"
                       placeholder="Contact Name"
                       name="name"
-                      value={formData.contact.name}
+                      value={formData.contacts.name}
                       onChange={handleContactChange}
                       required
                     />
@@ -189,7 +189,7 @@ const EventForm = ({ groups }) => {
                       className="form-control"
                       placeholder="Contact Email"
                       name="email"
-                      value={formData.contact.email}
+                      value={formData.contacts.email}
                       onChange={handleContactChange}
                       required
                     />
@@ -203,7 +203,7 @@ const EventForm = ({ groups }) => {
                       className="form-control"
                       placeholder="Contact phone"
                       name="phone"
-                      value={formData.contact.phone}
+                      value={formData.contacts.phone}
                       onChange={handleContactChange}
                       required
                     />
@@ -217,7 +217,7 @@ const EventForm = ({ groups }) => {
                       rows="2"
                       placeholder="Contact Address"
                       name="address"
-                      value={formData.contact.address}
+                      value={formData.contacts.address}
                       onChange={handleContactChange}
                       required
                     ></textarea>
@@ -241,8 +241,8 @@ const EventForm = ({ groups }) => {
                 className="btn btn-primary"
                 disabled={loading || !user || groups.length === 0}
               >
-                {loading ? "Creating..." : 
-                 groups.length === 0 ? "Create a Group First" : "Create Event"}
+                {loading ? "Creating..." :
+                  groups.length === 0 ? "Create a Group First" : "Create Event"}
               </button>
             </form>
           )}
