@@ -6,7 +6,8 @@ import { createEvent } from "../../redux/features/eventSlice";
 const EventForm = ({ groups }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  console.log(user?.token);
+  console.log(`user: ${user?.token}`);
+console.log(`user token: ${user}`);
 
   const { loading, error } = useSelector((state) => state.events);
   const [formData, setFormData] = useState({
