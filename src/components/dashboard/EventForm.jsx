@@ -64,7 +64,7 @@ const EventForm = ({ groups }) => {
     const taggedUserIds = await Promise.all(
       formData.tagged_users.split(',').map(async (username) => {
         const response = await fetch(
-          `${import.meta.env.VITE_API_SERVER_DOMAIN}/api/users/?username=${username.trim()}`
+          `${import.meta.env.VITE_API_SERVER_DOMAIN}/users/?username=${username.trim()}`
         );
         const data = await response.json();
         return data.id;
