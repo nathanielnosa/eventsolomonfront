@@ -6,15 +6,14 @@ import { createEvent } from "../../redux/features/eventSlice";
 const EventForm = ({ groups }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  console.log(`user: ${user?.token}`);
-console.log(`user token: ${user}`);
-
   const { loading, error } = useSelector((state) => state.events);
+
+  const [users, setUsers] = useState([]); // New state to store all users
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     group: "",
-    tagged_users: "",
+    tagged_users: [], // Store as an array of selected user IDs
     contacts: {
       name: "",
       email: "",
@@ -23,6 +22,26 @@ console.log(`user token: ${user}`);
     },
     file: null,
   });
+
+  useEffect(() => {
+    // Fetch users to populate the select dropdown
+    const fetchUsers = async () => {
+      const response = await fetch(`${import.meta.env.VITE_API_SERVER_DOMAIN}/users/`, {
+        headers: {
+          "Authorization": `Bearer ${user?.token}`, // Pass the token if required
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data); // Assuming your API returns a list of users
+      } else {
+        toast.error("Error fetching users.");
+      }
+    };
+
+    fetchUsers();
+  }, [user?.token]);
 
   useEffect(() => {
     if (error) {
@@ -54,40 +73,23 @@ console.log(`user token: ${user}`);
     }));
   };
 
+  const handleUserSelect = (e) => {
+    const selectedUsers = Array.from(e.target.selectedOptions, option => option.value);
+    setFormData((prev) => ({
+      ...prev,
+      tagged_users: selectedUsers,
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !user.token) {
-      toast.error("You must be logged in to perform this action.");
-      return;
-    }
+
     if (!formData.group) {
       toast.error("Please select a group");
       return;
     }
 
-    // Convert usernames to IDs
-    const taggedUserIds = await Promise.all(
-      formData.tagged_users.split(',').map(async (username) => {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_SERVER_DOMAIN}/users/?username=${username.trim()}`,
-          {
-            headers: {
-              "Authorization": `Bearer ${user?.token}`, // Ensure user.token exists
-              "Content-Type": "application/json"
-            }
-          }
-        );
-        if (!response.ok) {
-          throw new Error("Unauthorized request: Please log in again.");
-        }
-
-        const data = await response.json();
-        return data.id;
-      })
-    );
-
-    taggedUserIds.forEach(id => eventData.append("tagged_users", id));
-
+    // Prepare FormData
     const eventData = new FormData();
     eventData.append("title", formData.title);
     eventData.append("description", formData.description);
@@ -100,12 +102,13 @@ console.log(`user token: ${user}`);
       phone: formData.contacts.phone,
       address: formData.contacts.address
     }];
+    eventData.append("contacts", JSON.stringify(contacts));
 
-    const eventsData = new FormData();
-    eventsData.append("contacts", JSON.stringify(contacts));  // Wrap in an array
+    // Add selected users (tagged users)
+    formData.tagged_users.forEach(id => eventData.append("tagged_users", id));
 
     if (formData.file) eventData.append("file", formData.file);
-
+    
     try {
       const resultAction = await dispatch(createEvent(eventData));
       if (createEvent.fulfilled.match(resultAction)) {
@@ -114,7 +117,7 @@ console.log(`user token: ${user}`);
           title: "",
           description: "",
           group: "",
-          tagged_users: "",
+          tagged_users: [],
           contacts: { name: "", email: "", phone: "", address: "" },
           file: null,
         });
@@ -122,8 +125,6 @@ console.log(`user token: ${user}`);
     } catch (err) {
       toast.error("Error creating event:", err);
     }
-
-
   };
 
   return (
@@ -185,17 +186,22 @@ console.log(`user token: ${user}`);
                 </select>
               </div>
 
-              {/* Tag Users */}
+              {/* Tag Users (Multi-select dropdown) */}
               <div className="mb-3">
                 <label className="form-label">Tag Users</label>
-                <input
-                  type="text"
+                <select
+                  multiple
                   className="form-control"
-                  placeholder="Enter usernames separated by commas"
                   name="tagged_users"
                   value={formData.tagged_users}
-                  onChange={handleChange}
-                />
+                  onChange={handleUserSelect}
+                >
+                  {users.map(user => (
+                    <option key={user.id} value={user.id}>
+                      {user.username} {/* or another user attribute */}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* Contact Details */}
