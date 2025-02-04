@@ -54,37 +54,46 @@ const EventForm = ({ groups }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!formData.group) {
       toast.error("Please select a group");
       return;
     }
-  
-    const taggedUserIds = formData.tagged_users
-      .split(",")
-      .map((username) => username.trim())
-      .filter((username) => username);
-  
+
+    // Convert usernames to IDs
+    const taggedUserIds = await Promise.all(
+      formData.tagged_users.split(',').map(async (username) => {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_SERVER_DOMAIN}/api/users/?username=${username.trim()}`
+        );
+        const data = await response.json();
+        return data.id;
+      })
+    );
+
+    taggedUserIds.forEach(id => eventData.append("tagged_users", id));
+
     const eventData = new FormData();
     eventData.append("title", formData.title);
     eventData.append("description", formData.description);
     eventData.append("group", formData.group);
-    taggedUserIds.forEach(id => eventData.append("tagged_users", id));
-  
-    // Create a contacts object and append it as JSON
-    const contacts = {
+
+    // Convert contacts to JSON array
+    const contacts = [{
       name: formData.contacts.name,
       email: formData.contacts.email,
       phone: formData.contacts.phone,
-      address: formData.contacts.address,
-    };
-    eventData.append("contacts", JSON.stringify([contacts])); // Wrap in an array
-  
+      address: formData.contacts.address
+    }];
+
+    const eventsData = new FormData();
+    eventsData.append("contacts", JSON.stringify(contacts));  // Wrap in an array
+
     if (formData.file) eventData.append("file", formData.file);
-  // Log the data being sent
-  for (let [key, value] of eventData.entries()) {
-    console.log(key, value);
-  }
+    // Log the data being sent
+    for (let [key, value] of eventData.entries()) {
+      console.log(key, value);
+    }
     try {
       const resultAction = await dispatch(createEvent(eventData));
       if (createEvent.fulfilled.match(resultAction)) {
@@ -101,6 +110,8 @@ const EventForm = ({ groups }) => {
     } catch (err) {
       toast.error("Error creating event:", err);
     }
+
+
   };
 
   return (
