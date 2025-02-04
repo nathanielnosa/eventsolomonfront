@@ -81,48 +81,91 @@ const EventForm = ({ groups }) => {
     }));
   };
 
+
+  console.log(formData)
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!formData.group) {
+  //     toast.error("Please select a group");
+  //     return;
+  //   }
+
+  //   const eventData = new FormData();
+  //   eventData.append("title", formData.title);
+  //   eventData.append("description", formData.description);
+  //   eventData.append("group", formData.group);
+  //   eventData.append("user", user.id);  // Ensure user ID is passed
+
+  //   // 🔹 Fix `contacts` issue: Append directly, not as a JSON string
+  //   eventData.append("contacts", JSON.stringify([{
+  //     name: formData.contacts.name,
+  //     email: formData.contacts.email,
+  //     phone: formData.contacts.phone,
+  //     address: formData.contacts.address
+  //   }]));
+
+  //   // 🔹 Fix `tagged_users` issue: Send as a single value (or loop if backend accepts multiple)
+  //   if (formData.tagged_users.length === 1) {
+  //     eventData.append("tagged_users", formData.tagged_users[0]);
+  //   } else {
+  //     formData.tagged_users.forEach((id, index) => {
+  //       eventData.append(`tagged_users[${index}]`, id);
+  //     });
+  //   }
+
+  //   if (formData.file) {
+  //     eventData.append("file", formData.file);
+  //   }
+
+  //   try {
+  //     const resultAction = await dispatch(createEvent(eventData));
+  //     if (createEvent.fulfilled.match(resultAction)) {
+  //       toast.success("Event created successfully!");
+  //       setFormData({
+  //         title: "",
+  //         description: "",
+  //         group: "",
+  //         tagged_users: [],
+  //         contacts: { name: "", email: "", phone: "", address: "" },
+  //         file: null,
+  //       });
+  //     }
+  //   } catch (err) {
+  //     toast.error("Error creating event:", err);
+  //   }
+  // };
+  // console.log(formData)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.group) {
-      toast.error("Please select a group");
-      return;
-    }
-
-    // Prepare FormData
     const eventData = new FormData();
+
+    // Append simple fields
     eventData.append("title", formData.title);
     eventData.append("description", formData.description);
-    eventData.append("group", formData.group);
-     eventData.append("user", user.id); 
+    eventData.append("group", formData.group); // Send as string (backend converts to int)
+    eventData.append("user", user.id);
 
-    // Convert contacts to JSON array
-    const contacts = [{
-      name: formData.contacts.name,
-      email: formData.contacts.email,
-      phone: formData.contacts.phone,
-      address: formData.contacts.address
-    }];
-    eventData.append("contacts", JSON.stringify(contacts));
+    // 🔥 KEY FIX 1: Wrap contacts in an array & stringify
+    eventData.append("contacts", JSON.stringify([formData.contacts]));
 
-    // Add selected users (tagged users)
-    formData.tagged_users.forEach(id => eventData.append("tagged_users", id));
+    // 🔥 KEY FIX 2: Append each tagged_user separately
+    formData.tagged_users.forEach(id => {
+      eventData.append("tagged_users", id); // Send as string (backend converts to int)
+    });
 
-    if (formData.file) eventData.append("file", formData.file);
-    
+    // Append file if exists
+    if (formData.file) {
+      eventData.append("file", formData.file);
+    }
+
+    // Dispatch action
     try {
       const resultAction = await dispatch(createEvent(eventData));
-      if (createEvent.fulfilled.match(resultAction)) {
-        toast.success("Event created successfully!");
-        setFormData({
-          title: "",
-          description: "",
-          group: "",
-          tagged_users: [],
-          contacts: { name: "", email: "", phone: "", address: "" },
-          file: null,
-        });
-      }
+      // ... rest of your code ...
     } catch (err) {
       toast.error("Error creating event:", err);
     }

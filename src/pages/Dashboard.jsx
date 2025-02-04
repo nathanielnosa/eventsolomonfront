@@ -106,7 +106,7 @@ const Dashboard = () => {
                         <div className="card-body">
                           <h5 className="card-title">{event.title}</h5>
                           <p>{event.description}</p>
-                          <small>Group: {event.group?.name}</small>
+                          <small>Group:{groups.name}</small>
                         </div>
                       </div>
                     </div>
