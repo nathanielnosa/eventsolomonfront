@@ -94,6 +94,7 @@ const EventForm = ({ groups }) => {
     eventData.append("title", formData.title);
     eventData.append("description", formData.description);
     eventData.append("group", formData.group);
+     eventData.append("user", user.id); 
 
     // Convert contacts to JSON array
     const contacts = [{
