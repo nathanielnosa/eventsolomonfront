@@ -6,8 +6,9 @@ import { createEvent } from "../../redux/features/eventSlice";
 const EventForm = ({ groups }) => {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const { loading, error } = useSelector((state) => state.events);
+  console.log(user?.token);
 
+  const { loading, error } = useSelector((state) => state.events);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -54,7 +55,10 @@ const EventForm = ({ groups }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    if (!user || !user.token) {
+      toast.error("You must be logged in to perform this action.");
+      return;
+    }
     if (!formData.group) {
       toast.error("Please select a group");
       return;
@@ -64,8 +68,18 @@ const EventForm = ({ groups }) => {
     const taggedUserIds = await Promise.all(
       formData.tagged_users.split(',').map(async (username) => {
         const response = await fetch(
-          `${import.meta.env.VITE_API_SERVER_DOMAIN}/users/?username=${username.trim()}`
+          `${import.meta.env.VITE_API_SERVER_DOMAIN}/users/?username=${username.trim()}`,
+          {
+            headers: {
+              "Authorization": `Bearer ${user?.token}`, // Ensure user.token exists
+              "Content-Type": "application/json"
+            }
+          }
         );
+        if (!response.ok) {
+          throw new Error("Unauthorized request: Please log in again.");
+        }
+
         const data = await response.json();
         return data.id;
       })
@@ -90,7 +104,7 @@ const EventForm = ({ groups }) => {
     eventsData.append("contacts", JSON.stringify(contacts));  // Wrap in an array
 
     if (formData.file) eventData.append("file", formData.file);
-    
+
     try {
       const resultAction = await dispatch(createEvent(eventData));
       if (createEvent.fulfilled.match(resultAction)) {
