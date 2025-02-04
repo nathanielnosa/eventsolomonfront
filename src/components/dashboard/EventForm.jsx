@@ -90,10 +90,7 @@ const EventForm = ({ groups }) => {
     eventsData.append("contacts", JSON.stringify(contacts));  // Wrap in an array
 
     if (formData.file) eventData.append("file", formData.file);
-    // Log the data being sent
-    for (let [key, value] of eventData.entries()) {
-      console.log(key, value);
-    }
+    
     try {
       const resultAction = await dispatch(createEvent(eventData));
       if (createEvent.fulfilled.match(resultAction)) {
