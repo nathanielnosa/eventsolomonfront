@@ -46,7 +46,7 @@ export const updateEvent = createAsyncThunk(
   'events/update',
   async ({ id, formData }, { getState }) => {
     const { auth } = getState();
-    const response = await fetch(`${import.meta.env.VITE_API_SERVER_DOMAIN}/event/${id}/`, {
+    const response = await fetch(`${import.meta.env.VITE_API_SERVER_DOMAIN}/events/${id}/`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${auth.token}`,
@@ -62,7 +62,7 @@ export const deleteEvent = createAsyncThunk(
   'events/delete',
   async (id, { getState }) => {
     const { auth } = getState();
-    const response = await fetch(`${import.meta.env.VITE_API_SERVER_DOMAIN}/event/${id}/`, {
+    const response = await fetch(`${import.meta.env.VITE_API_SERVER_DOMAIN}/events/${id}/`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${auth.token}`,

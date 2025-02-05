@@ -2,8 +2,11 @@ import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import { createEvent } from "../../redux/features/eventSlice";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 
 const EventForm = ({ groups }) => {
+  const [date, setDate] = useState(new Date());
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const { loading, error } = useSelector((state) => state.events);
@@ -81,63 +84,6 @@ const EventForm = ({ groups }) => {
     }));
   };
 
-
-  console.log(formData)
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!formData.group) {
-  //     toast.error("Please select a group");
-  //     return;
-  //   }
-
-  //   const eventData = new FormData();
-  //   eventData.append("title", formData.title);
-  //   eventData.append("description", formData.description);
-  //   eventData.append("group", formData.group);
-  //   eventData.append("user", user.id);  // Ensure user ID is passed
-
-  //   // 🔹 Fix `contacts` issue: Append directly, not as a JSON string
-  //   eventData.append("contacts", JSON.stringify([{
-  //     name: formData.contacts.name,
-  //     email: formData.contacts.email,
-  //     phone: formData.contacts.phone,
-  //     address: formData.contacts.address
-  //   }]));
-
-  //   // 🔹 Fix `tagged_users` issue: Send as a single value (or loop if backend accepts multiple)
-  //   if (formData.tagged_users.length === 1) {
-  //     eventData.append("tagged_users", formData.tagged_users[0]);
-  //   } else {
-  //     formData.tagged_users.forEach((id, index) => {
-  //       eventData.append(`tagged_users[${index}]`, id);
-  //     });
-  //   }
-
-  //   if (formData.file) {
-  //     eventData.append("file", formData.file);
-  //   }
-
-  //   try {
-  //     const resultAction = await dispatch(createEvent(eventData));
-  //     if (createEvent.fulfilled.match(resultAction)) {
-  //       toast.success("Event created successfully!");
-  //       setFormData({
-  //         title: "",
-  //         description: "",
-  //         group: "",
-  //         tagged_users: [],
-  //         contacts: { name: "", email: "", phone: "", address: "" },
-  //         file: null,
-  //       });
-  //     }
-  //   } catch (err) {
-  //     toast.error("Error creating event:", err);
-  //   }
-  // };
-  // console.log(formData)
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -166,169 +112,178 @@ const EventForm = ({ groups }) => {
     try {
       const resultAction = await dispatch(createEvent(eventData));
       // ... rest of your code ...
+      toast.success("Event created");
     } catch (err) {
       toast.error("Error creating event:", err);
     }
   };
 
   return (
-    <div className="col-lg-6 mb-4">
-      <div className="card">
-        <ToastContainer />
-        <div className="card-header bg-primary text-white">
-          <h5>Create Event</h5>
+    <div className="row">
+      <div className="col-md-8">
+        <div className="card">
+          <ToastContainer />
+          <div className="card-header bg-primary text-white">
+            <h5>Create Event</h5>
+          </div>
+          <div className="card-body">
+            {!user ? (
+              <p className="text-danger">You must be logged in to create an event.</p>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                {/* Title */}
+                <div className="mb-3">
+                  <label className="form-label">Title</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Event Title"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="mb-3">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows="2"
+                    placeholder="Event Description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    required
+                  ></textarea>
+                </div>
+
+                {/* Group Selection */}
+                <div className="mb-3">
+                  <label className="form-label">Group</label>
+                  <select
+                    className="form-control"
+                    name="group"
+                    value={formData.group}
+                    onChange={handleChange}
+                    required
+                  >
+                    <option value="">Select a Group</option>
+                    {(Array.isArray(groups) ? groups : []).map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tag Users (Multi-select dropdown) */}
+                <div className="mb-3">
+                  <label className="form-label">Tag Users</label>
+                  <select
+                    multiple
+                    className="form-control"
+                    name="tagged_users"
+                    value={formData.tagged_users}
+                    onChange={handleUserSelect}
+                  >
+                    {users.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.username} {/* or another user attribute */}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Contact Details */}
+                <div className="row">
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Contact Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Contact Name"
+                        name="name"
+                        value={formData.contacts.name}
+                        onChange={handleContactChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Contact Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="Contact Email"
+                        name="email"
+                        value={formData.contacts.email}
+                        onChange={handleContactChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Contact Phone</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Contact phone"
+                        name="phone"
+                        value={formData.contacts.phone}
+                        onChange={handleContactChange}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <label className="form-label">Contact Address</label>
+                      <textarea
+                        className="form-control"
+                        rows="2"
+                        placeholder="Contact Address"
+                        name="address"
+                        value={formData.contacts.address}
+                        onChange={handleContactChange}
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                {/* File Upload */}
+                <div className="mb-3">
+                  <label className="form-label">Upload File</label>
+                  <input
+                    type="file"
+                    className="form-control"
+                    name="file"
+                    onChange={handleFileChange}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={loading || !user || groups.length === 0}
+                >
+                  {loading ? "Creating..." :
+                    groups.length === 0 ? "Create a Group First" : "Create Event"}
+                </button>
+              </form>
+            )}
+          </div>
         </div>
-        <div className="card-body">
-          {!user ? (
-            <p className="text-danger">You must be logged in to create an event.</p>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              {/* Title */}
-              <div className="mb-3">
-                <label className="form-label">Title</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Event Title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
-
-              {/* Description */}
-              <div className="mb-3">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-control"
-                  rows="2"
-                  placeholder="Event Description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                ></textarea>
-              </div>
-
-              {/* Group Selection */}
-              <div className="mb-3">
-                <label className="form-label">Group</label>
-                <select
-                  className="form-control"
-                  name="group"
-                  value={formData.group}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select a Group</option>
-                  {(Array.isArray(groups) ? groups : []).map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tag Users (Multi-select dropdown) */}
-              <div className="mb-3">
-                <label className="form-label">Tag Users</label>
-                <select
-                  multiple
-                  className="form-control"
-                  name="tagged_users"
-                  value={formData.tagged_users}
-                  onChange={handleUserSelect}
-                >
-                  {users.map(user => (
-                    <option key={user.id} value={user.id}>
-                      {user.username} {/* or another user attribute */}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Contact Details */}
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">Contact Name</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Contact Name"
-                      name="name"
-                      value={formData.contacts.name}
-                      onChange={handleContactChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">Contact Email</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      placeholder="Contact Email"
-                      name="email"
-                      value={formData.contacts.email}
-                      onChange={handleContactChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">Contact Phone</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="Contact phone"
-                      name="phone"
-                      value={formData.contacts.phone}
-                      onChange={handleContactChange}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="mb-3">
-                    <label className="form-label">Contact Address</label>
-                    <textarea
-                      className="form-control"
-                      rows="2"
-                      placeholder="Contact Address"
-                      name="address"
-                      value={formData.contacts.address}
-                      onChange={handleContactChange}
-                      required
-                    ></textarea>
-                  </div>
-                </div>
-              </div>
-
-              {/* File Upload */}
-              <div className="mb-3">
-                <label className="form-label">Upload File</label>
-                <input
-                  type="file"
-                  className="form-control"
-                  name="file"
-                  onChange={handleFileChange}
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading || !user || groups.length === 0}
-              >
-                {loading ? "Creating..." :
-                  groups.length === 0 ? "Create a Group First" : "Create Event"}
-              </button>
-            </form>
-          )}
+      </div>
+      <div className="col-md-4">
+        <div className="card border-0">
+          <h3>Calendar</h3>
+          <Calendar value={date} onChange={setDate} />
         </div>
       </div>
     </div>

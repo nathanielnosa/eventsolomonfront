@@ -2,8 +2,11 @@ import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import { createGroup } from "../../redux/features/groupSlice";
-
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 const GroupForm = ({ onGroupAdded }) => {
+  const [date, setDate] = useState(new Date());
+
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const { loading, error } = useSelector((state) => state.groups);
@@ -27,7 +30,8 @@ const GroupForm = ({ onGroupAdded }) => {
   };
 
   return (
-    <div className="col-lg-6 mb-4">
+    <div className="row">
+      <div className="col-md-8">
       <div className="card">
         <ToastContainer />
         <div className="card-header bg-success text-white">
@@ -64,6 +68,13 @@ const GroupForm = ({ onGroupAdded }) => {
               {loading ? "Creating..." : "Create Group"}
             </button>
           </form>
+        </div>
+      </div>
+      </div>
+      <div className="col-md-4">
+      <div className="card border-0">
+          <h3>Calendar</h3>
+          <Calendar value={date} onChange={setDate} />
         </div>
       </div>
     </div>
